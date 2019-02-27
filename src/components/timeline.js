@@ -6,22 +6,25 @@ import TimelineItem from './timeline_item';
 
 class Timeline extends Component {
 
-  sortedTimelineItems() {
+  get sortedTimelineItems() {
     const timelineItems = this.props.timelineItems.slice();
-    return timelineItems.sort((a, b) => {
+    const sortedItems = timelineItems.sort((a, b) => {
       return moment(a.start).unix() - moment(b.start).unix();
     });
+    return sortedItems;
   }
 
   // Find first starting date for beginning of timeline
-  timelineStart() {
-    const items = this.sortedTimelineItems();
+  get timelineStart() {
+    const items = this.sortedTimelineItems;
     return items && items[0] ? items[0].start : null;
   }
 
   // Find the latest ending date to set final date on timeline
-  timelineEnd() {
-    const reverseSortedItems = this.props.timelineItems.sort((a, b) => {
+  get timelineEnd() {
+    const items = this.sortedTimelineItems;
+    if (!items) { return; }
+    const reverseSortedItems = items.sort((a, b) => {
       return moment(b.end).unix() - moment(a.end).unix();
     });
     return reverseSortedItems && reverseSortedItems[0] ? reverseSortedItems[0].end : null;
@@ -29,8 +32,8 @@ class Timeline extends Component {
 
   // Create array of all dates between first and last on timeline
   displayDates() {
-    const firstItem = this.timelineStart();
-    const lastItem = this.timelineEnd();
+    const firstItem = this.timelineStart;
+    const lastItem = this.timelineEnd;
     const diff = moment(lastItem).diff(firstItem, 'days') + 1;
     const dateArr = [];
     for (var i = 0; i < diff; i++) {
@@ -46,7 +49,8 @@ class Timeline extends Component {
 
   groupedTimelineItems() {
     const results = [];
-    const items = this.sortedTimelineItems();
+    const items = this.sortedTimelineItems;
+    if (!items.length) { return; }
     let foundExistingObj, nextVerticalPos;
 
     // set first item
@@ -57,7 +61,7 @@ class Timeline extends Component {
       end: items[0].end,
       items: [ items[0] ]
     });
-    
+
     // loop through remaining items
     for (var i = 1; i < items.length; i++) {
       foundExistingObj = false;
@@ -103,6 +107,7 @@ class Timeline extends Component {
   render() {
     const displayDates = this.displayDates();
     const groupedTimelineItems = this.groupedTimelineItems();
+    const firstItem = this.timelineStart;
 
     return (
       <div>
@@ -114,14 +119,14 @@ class Timeline extends Component {
           ))}
         </div>
         <div className="timeline-container">
-          {groupedTimelineItems.map((group, i) => (
+          {groupedTimelineItems && groupedTimelineItems.map((group, i) => (
             <div key={group.verticalPosition} className="timeline-row" style={{ top: group.verticalPositionPx }}>
               {group.items.map((item) => (
                 <TimelineItem
                   item={item}
                   key={item.id}
                   color={this.getRandomColor()}
-                  timelineStart={this.timelineStart()}
+                  timelineStart={firstItem}
                 />
               ))}
             </div>
