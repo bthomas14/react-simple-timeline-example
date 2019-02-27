@@ -1,7 +1,15 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import moment from 'moment';
 
 class TimelineItem extends Component {
+
+  static propTypes = {
+    timelineStart: PropTypes.func.isRequired,
+    item: PropTypes.object,
+    timelineStart: PropTypes.string,
+    color: PropTypes.string
+  };
 
   constructor(props) {
     super(props);
@@ -10,10 +18,6 @@ class TimelineItem extends Component {
       isEditing: false,
       itemName: props.item.name
     };
-
-    this.toggleIsEditing = this.toggleIsEditing.bind(this);
-    this.handleChange = this.handleChange.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
   }
 
   toggleIsEditing(e) {
@@ -35,15 +39,15 @@ class TimelineItem extends Component {
 
   renderForm() {
     return (
-      <form onSubmit={this.handleSubmit}>
-        <input type="text" value={this.state.itemName} onChange={this.handleChange} />
+      <form onSubmit={e => this.handleSubmit(e)}>
+        <input type="text" value={this.state.itemName} onChange={e => this.handleChange(e)} />
       </form>
     );
   }
 
   renderName() {
     return (
-      <a href="#" onClick={this.toggleIsEditing}>
+      <a href="#" onClick={e => this.toggleIsEditing(e)}>
         {this.state.itemName}
       </a>
     );

@@ -7,7 +7,8 @@ import TimelineItem from './timeline_item';
 class Timeline extends Component {
 
   sortedTimelineItems() {
-    return this.props.timelineItems.sort((a, b) => {
+    const timelineItems = this.props.timelineItems.slice();
+    return timelineItems.sort((a, b) => {
       return moment(a.start).unix() - moment(b.start).unix();
     });
   }
@@ -15,15 +16,15 @@ class Timeline extends Component {
   // Find first starting date for beginning of timeline
   timelineStart() {
     const items = this.sortedTimelineItems();
-    return items[0].start;
+    return items && items[0] ? items[0].start : null;
   }
 
   // Find the latest ending date to set final date on timeline
   timelineEnd() {
     const reverseSortedItems = this.props.timelineItems.sort((a, b) => {
-      return moment(a.end).unix() - moment(b.end).unix();
-    }).reverse();
-    return reverseSortedItems[0].end;
+      return moment(b.end).unix() - moment(a.end).unix();
+    });
+    return reverseSortedItems && reverseSortedItems[0] ? reverseSortedItems[0].end : null;
   }
 
   // Create array of all dates between first and last on timeline
@@ -48,36 +49,35 @@ class Timeline extends Component {
     const items = this.sortedTimelineItems();
     let foundExistingObj, nextVerticalPos;
 
-    for (var i = 0; i < items.length; i++) {
-      if (results.length === 0) {
+    // set first item
+    results.push({
+      verticalPosition: 0,
+      verticalPositionPx: `0px`,
+      start: items[0].start,
+      end: items[0].end,
+      items: [ items[0] ]
+    });
+    
+    // loop through remaining items
+    for (var i = 1; i < items.length; i++) {
+      foundExistingObj = false;
+      for (var j = 0; j < results.length; j++) {
+        if(!this.isWithinRange(items[i], results[j])) {
+          results[j].items.push(items[i]);
+          results[j].end = items[i].end;
+          foundExistingObj = true;
+          break;
+        }
+      }
+      if (!foundExistingObj) {
+        nextVerticalPos = results[results.length - 1].verticalPosition + 1;
         results.push({
-          verticalPosition: 0,
-          verticalPositionPx: `0px`,
+          verticalPosition: nextVerticalPos,
+          verticalPositionPx: `${nextVerticalPos*30}px`,
           start: items[i].start,
           end: items[i].end,
-          items: [ items[i] ]
+          items: [items[i]]
         });
-      } else {
-        foundExistingObj = false;
-        for (var j = 0; j < results.length; j++) {
-          if(!this.isWithinRange(items[i], results[j])) {
-            results[j].items.push(items[i]);
-            results[j].end = items[i].end;
-            foundExistingObj = true;
-            break;
-          }
-        }
-        if (!foundExistingObj) {
-          nextVerticalPos = results[results.length - 1].verticalPosition + 1;
-          results.push({
-            verticalPosition: nextVerticalPos,
-            verticalPositionPx: `${nextVerticalPos*30}px`,
-            start: items[i].start,
-            end: items[i].end,
-            items: [items[i]]
-          });
-        }
-
       }
     }
     return results;
